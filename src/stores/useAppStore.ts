@@ -1,27 +1,12 @@
 import { create } from 'zustand'
+import type { Language, POI } from '@/lib/types'
 
-export type Language = 'es' | 'en' | 'de' | 'ca' | 'fr'
+export type { Language, POI }
 
 export interface UserPosition {
   lat: number
   lng: number
   accuracy: number
-}
-
-export interface POI {
-  id: string
-  number: number
-  section: 'jardines' | 'casa' | 'dependencias'
-  nameKey: string
-  guidePoints: string | null
-  latitude: number
-  longitude: number
-  activationRadiusM: number
-  durationSeconds: number | null
-  imageUrl: string | null
-  sortOrder: number
-  isBifurcation: boolean
-  bifurcationTargets: number[] | null
 }
 
 interface AppState {
