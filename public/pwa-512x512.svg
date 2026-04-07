@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Background (maskable — safe zone is central 80%) -->
+  <rect width="512" height="512" fill="#233B29"/>
+  <!-- Subtle texture ring -->
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#F8F2E7" stroke-width="8" opacity="0.08"/>
+  <!-- Stylised leaf / garden motif -->
+  <g transform="translate(256,256)">
+    <!-- Outer decorative ring -->
+    <path d="M0,-138 C74,-138 138,-74 138,0 C138,74 74,138 0,138 C-74,138 -138,74 -138,0 C-138,-74 -74,-138 0,-138 Z"
+          fill="none" stroke="#F8F2E7" stroke-width="8" opacity="0.2"/>
+    <!-- Stem -->
+    <line x1="0" y1="138" x2="0" y2="-24" stroke="#F8F2E7" stroke-width="7" stroke-linecap="round" opacity="0.75"/>
+    <!-- Leaf body -->
+    <path d="M0,-24 C-78,-54 -100,-10 0,92 C100,-10 78,-54 0,-24 Z" fill="#F8F2E7" opacity="0.92"/>
+    <!-- Leaf vein -->
+    <line x1="0" y1="-20" x2="0" y2="74" stroke="#233B29" stroke-width="4" stroke-linecap="round" opacity="0.45"/>
+    <!-- Small side veins -->
+    <line x1="0" y1="10"  x2="-30" y2="32" stroke="#233B29" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+    <line x1="0" y1="10"  x2=" 30" y2="32" stroke="#233B29" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+    <line x1="0" y1="38"  x2="-20" y2="56" stroke="#233B29" stroke-width="2"   stroke-linecap="round" opacity="0.25"/>
+    <line x1="0" y1="38"  x2=" 20" y2="56" stroke="#233B29" stroke-width="2"   stroke-linecap="round" opacity="0.25"/>
+  </g>
+</svg>
