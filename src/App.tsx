@@ -1,7 +1,8 @@
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import AppShell from '@/components/layout/AppShell'
-import SplashPage from '@/pages/SplashPage'
+// import SplashPage from '@/pages/SplashPage'  // TODO: restore when audioguide goes live
+import TempLandingPage from '@/pages/TempLandingPage'
 import LanguagePage from '@/pages/LanguagePage'
 import HomePage from '@/pages/HomePage'
 import POIDetailPage from '@/pages/POIDetailPage'
@@ -15,7 +16,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<AppShell />}>
-          <Route index element={<SplashPage />} />
+          {/* <Route index element={<SplashPage />} /> */}
+          <Route index element={<TempLandingPage />} />
           <Route path="/language" element={<LanguagePage />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/poi/:id" element={<POIDetailPage />} />
