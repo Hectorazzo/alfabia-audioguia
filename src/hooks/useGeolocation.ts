@@ -80,12 +80,9 @@ export function useGeolocation(): UseGeolocationResult {
       return
     }
 
-    let permStatus: PermissionStatus
-
     navigator.permissions
       .query({ name: 'geolocation' })
       .then((status) => {
-        permStatus = status
 
         if (status.state === 'granted') {
           startWatching()

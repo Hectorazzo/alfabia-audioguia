@@ -12,11 +12,8 @@ import {
 // ─── Error handling ──────────────────────────────────────────────────────────
 
 export class POIServiceError extends Error {
-  constructor(
-    message: string,
-    public readonly cause?: unknown,
-  ) {
-    super(message)
+  constructor(message: string, cause?: unknown) {
+    super(message, { cause })
     this.name = 'POIServiceError'
   }
 }
