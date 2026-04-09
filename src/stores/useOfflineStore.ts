@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { Language } from '@/lib/types'
 
 export type DownloadState = 'idle' | 'downloading' | 'complete' | 'error'
 
@@ -7,6 +8,7 @@ interface OfflineState {
   downloadState: DownloadState
   downloadProgress: number
   cachedAudios: string[]
+  cachedLanguage: Language | null
   availableSpace: number
 
   setDownloadState: (state: DownloadState) => void
@@ -14,6 +16,7 @@ interface OfflineState {
   addCachedAudio: (poiId: string) => void
   removeCachedAudio: (poiId: string) => void
   clearCachedAudios: () => void
+  setCachedLanguage: (language: Language | null) => void
   setAvailableSpace: (bytes: number) => void
   isAudioCached: (poiId: string) => boolean
 }
@@ -24,6 +27,7 @@ export const useOfflineStore = create<OfflineState>()(
       downloadState: 'idle',
       downloadProgress: 0,
       cachedAudios: [],
+      cachedLanguage: null,
       availableSpace: 0,
 
       setDownloadState: (downloadState) => set({ downloadState }),
@@ -43,7 +47,9 @@ export const useOfflineStore = create<OfflineState>()(
         })),
 
       clearCachedAudios: () =>
-        set({ cachedAudios: [], downloadState: 'idle', downloadProgress: 0 }),
+        set({ cachedAudios: [], cachedLanguage: null, downloadState: 'idle', downloadProgress: 0 }),
+
+      setCachedLanguage: (cachedLanguage) => set({ cachedLanguage }),
 
       setAvailableSpace: (availableSpace) => set({ availableSpace }),
 
@@ -54,6 +60,7 @@ export const useOfflineStore = create<OfflineState>()(
       // Don't persist transient download state across sessions
       partialize: (state) => ({
         cachedAudios: state.cachedAudios,
+        cachedLanguage: state.cachedLanguage,
         availableSpace: state.availableSpace,
       }),
     },

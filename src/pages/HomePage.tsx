@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
-import { MapPin, List, Download, CheckCircle, Loader2, AlertCircle, Navigation } from 'lucide-react'
+import { MapPin, List, Loader2, AlertCircle, Navigation } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/stores/useAppStore'
-import { useOfflineStore } from '@/stores/useOfflineStore'
 import { useProgressStore } from '@/stores/useProgressStore'
 import { getPOIsWithTranslations } from '@/services/poiService'
 import POIList, { type POIWithTranslation } from '@/components/poi/POIList'
 import POICard from '@/components/poi/POICard'
+import OfflineManager from '@/components/offline/OfflineManager'
 import type { Language } from '@/lib/types'
 
 // ─── UI copy ─────────────────────────────────────────────────────────────────
@@ -15,10 +15,6 @@ const UI_COPY = {
   es: {
     nearbyTab: 'Cerca de mí',
     allTab: 'Ver todos',
-    downloadIdle: 'Descargar audios',
-    downloadingPrefix: 'Descargando',
-    downloadComplete: 'Audios offline listos',
-    downloadError: 'Error — reintentar',
     nearbyEmpty: 'No hay puntos cercanos',
     nearbyEmptyHint: 'Activa el GPS para recibir sugerencias según tu posición.',
     nearbyNoGps: 'Ubicación no disponible',
@@ -32,10 +28,6 @@ const UI_COPY = {
   en: {
     nearbyTab: 'Near me',
     allTab: 'All stops',
-    downloadIdle: 'Download audio',
-    downloadingPrefix: 'Downloading',
-    downloadComplete: 'Audio ready offline',
-    downloadError: 'Error — retry',
     nearbyEmpty: 'No nearby stops',
     nearbyEmptyHint: 'Enable GPS to receive suggestions based on your location.',
     nearbyNoGps: 'Location unavailable',
@@ -49,10 +41,6 @@ const UI_COPY = {
   de: {
     nearbyTab: 'In der Nähe',
     allTab: 'Alle Punkte',
-    downloadIdle: 'Audios herunterladen',
-    downloadingPrefix: 'Wird geladen',
-    downloadComplete: 'Audios offline bereit',
-    downloadError: 'Fehler — wiederholen',
     nearbyEmpty: 'Keine nahen Punkte',
     nearbyEmptyHint: 'Aktiviere GPS für Vorschläge basierend auf deinem Standort.',
     nearbyNoGps: 'Standort nicht verfügbar',
@@ -66,16 +54,12 @@ const UI_COPY = {
   ca: {
     nearbyTab: 'Prop meu',
     allTab: 'Veure tots',
-    downloadIdle: 'Descarregar àudios',
-    downloadingPrefix: 'Descarregant',
-    downloadComplete: 'Àudios offline llestos',
-    downloadError: 'Error — reintentar',
     nearbyEmpty: 'No hi ha punts propers',
     nearbyEmptyHint: 'Activa el GPS per rebre suggeriments segons la teva posició.',
     nearbyNoGps: 'Ubicació no disponible',
     nearbyNoGpsHint: "Activa la ubicació per veure els punts més propers.",
     loading: 'Carregant…',
-    error: 'No s\'ha pogut carregar la llista. Comprova la connexió.',
+    error: "No s'ha pogut carregar la llista. Comprova la connexió.",
     retry: 'Tornar a intentar',
     listened: 'escoltat',
     progress: (n: number, total: number) => `${n} de ${total}`,
@@ -83,10 +67,6 @@ const UI_COPY = {
   fr: {
     nearbyTab: 'Près de moi',
     allTab: 'Tout voir',
-    downloadIdle: 'Télécharger les audios',
-    downloadingPrefix: 'Téléchargement',
-    downloadComplete: 'Audios prêts hors ligne',
-    downloadError: 'Erreur — réessayer',
     nearbyEmpty: 'Aucun point à proximité',
     nearbyEmptyHint: 'Activez le GPS pour recevoir des suggestions selon votre position.',
     nearbyNoGps: 'Localisation indisponible',
@@ -98,80 +78,6 @@ const UI_COPY = {
     progress: (n: number, total: number) => `${n} sur ${total}`,
   },
 } satisfies Record<Language, Record<string, string | ((n: number, total: number) => string)>>
-
-// ─── Download button ──────────────────────────────────────────────────────────
-
-interface DownloadBarProps {
-  language: Language
-  totalCount: number
-}
-
-function DownloadBar({ language, totalCount }: DownloadBarProps) {
-  const copy = UI_COPY[language]
-  const { downloadState, downloadProgress, cachedAudios } = useOfflineStore()
-
-  function handleDownload() {
-    // TODO: wire up audioService.downloadAudiosForLanguage(language) in the next sprint
-    // The offline store will be driven by that service; this stub shows the wired state.
-    console.info('[DownloadBar] Download triggered — audioService not yet implemented')
-  }
-
-  if (downloadState === 'complete') {
-    return (
-      <div className="flex items-center justify-center gap-2 py-3 px-4">
-        <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-        <span className="text-sm font-medium text-emerald-700">{copy.downloadComplete as string}</span>
-        <span className="text-xs text-alfabia-text-muted">
-          ({cachedAudios.length}/{totalCount})
-        </span>
-      </div>
-    )
-  }
-
-  if (downloadState === 'downloading') {
-    const current = Math.round((downloadProgress / 100) * totalCount)
-    return (
-      <div className="flex flex-col gap-1 px-4 py-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="flex items-center gap-1.5 font-medium text-alfabia-green">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            {copy.downloadingPrefix as string}…
-          </span>
-          <span className="text-xs text-alfabia-text-muted">
-            {(copy.progress as (n: number, total: number) => string)(current, totalCount)}
-          </span>
-        </div>
-        <div className="h-1.5 bg-alfabia-border rounded-full overflow-hidden">
-          <div
-            className="h-full bg-alfabia-green rounded-full transition-all duration-300"
-            style={{ width: `${downloadProgress}%` }}
-          />
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleDownload}
-      className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-alfabia-green text-alfabia-cream font-medium text-sm rounded-xl active:bg-alfabia-green-dark transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-alfabia-green"
-    >
-      {downloadState === 'error' ? (
-        <>
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          {copy.downloadError as string}
-        </>
-      ) : (
-        <>
-          <Download className="w-4 h-4 shrink-0" />
-          {copy.downloadIdle as string}
-          <span className="opacity-70 text-xs font-normal">({totalCount})</span>
-        </>
-      )}
-    </button>
-  )
-}
 
 // ─── Nearby tab ───────────────────────────────────────────────────────────────
 
@@ -347,10 +253,10 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* ── Download bar (fixed above bottom nav) ── */}
+      {/* ── Offline manager (fixed above bottom nav) ── */}
       {!loading && !error && allItems.length > 0 && (
         <div className="shrink-0 px-4 py-3 bg-alfabia-cream border-t border-alfabia-border">
-          <DownloadBar language={language} totalCount={allItems.length} />
+          <OfflineManager language={language} items={allItems} />
         </div>
       )}
     </div>
