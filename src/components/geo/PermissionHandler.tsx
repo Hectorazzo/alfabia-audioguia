@@ -84,7 +84,7 @@ const COPY = {
       "Vous pouvez toujours utiliser l'audioguide manuellement. Si vous changez d'avis, activez la localisation dans les paramètres de votre navigateur.",
     unavailableTitle: 'Signal GPS faible',
     unavailableDesc:
-      'Votre position ne peut pas être déterminée pour l'instant. Vous pouvez continuer à naviguer manuellement.',
+      "Votre position ne peut pas être déterminée pour l'instant. Vous pouvez continuer à naviguer manuellement.",
     weakBadge: 'GPS imprécis — suggestions approximatives',
   },
 } satisfies Record<Language, Record<string, string>>
