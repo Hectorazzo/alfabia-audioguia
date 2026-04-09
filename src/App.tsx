@@ -7,6 +7,7 @@ import LanguagePage from '@/pages/LanguagePage'
 import HomePage from '@/pages/HomePage'
 import POIDetailPage from '@/pages/POIDetailPage'
 import ClosingPage from '@/pages/ClosingPage'
+import SettingsPage from '@/pages/SettingsPage'
 
 // Lazy-load MapPage — Leaflet is heavy
 const MapPage = lazy(() => import('@/pages/MapPage'))
@@ -34,6 +35,7 @@ export default function App() {
             }
           />
           <Route path="/closing" element={<ClosingPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
