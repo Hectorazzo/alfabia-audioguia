@@ -87,8 +87,7 @@ registerRoute(
 registerRoute(
   ({ url }) =>
     url.hostname.endsWith('.supabase.co') &&
-    (url.pathname.startsWith('/rest/v1/') ||
-      url.pathname.startsWith('/auth/v1/')),
+    url.pathname.startsWith('/rest/v1/'),
   new NetworkFirst({
     cacheName: CACHE_NAMES.supabaseData,
     networkTimeoutSeconds: 10,   // generous for 3G
