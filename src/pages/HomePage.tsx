@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { MapPin, List, Loader2, AlertCircle, Navigation } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/stores/useAppStore'
 import { useProgressStore } from '@/stores/useProgressStore'
 import { getPOIsWithTranslations } from '@/services/poiService'
+import { trackSessionStart } from '@/services/analyticsService'
 import POIList, { type POIWithTranslation } from '@/components/poi/POIList'
 import POICard from '@/components/poi/POICard'
 import OfflineManager from '@/components/offline/OfflineManager'
@@ -143,6 +144,13 @@ export default function HomePage() {
   const [allItems, setAllItems] = useState<POIWithTranslation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const sessionTracked = useRef(false)
+  useEffect(() => {
+    if (sessionTracked.current) return
+    sessionTracked.current = true
+    trackSessionStart()
+  }, [])
 
   const copy = UI_COPY[language]
 

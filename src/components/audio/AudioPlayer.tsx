@@ -26,6 +26,8 @@ interface AudioPlayerProps {
   poiId: string
   audioUrlOgg: string | null
   audioUrlMp3: string | null
+  onPlay?: () => void
+  onComplete?: (durationSeconds: number) => void
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -34,6 +36,8 @@ export default function AudioPlayer({
   poiId,
   audioUrlOgg,
   audioUrlMp3,
+  onPlay,
+  onComplete,
 }: AudioPlayerProps) {
   const markAsListened = useProgressStore((s) => s.markAsListened)
   const isFavorite = useProgressStore((s) => s.isFavorite)
@@ -58,46 +62,48 @@ export default function AudioPlayer({
     const audio = audioRef.current
     if (!audio) return
 
-    const onPlay       = () => { setIsPlaying(true);  setIsBuffering(false) }
-    const onPause      = () => setIsPlaying(false)
-    const onWaiting    = () => setIsBuffering(true)
-    const onCanPlay    = () => setIsBuffering(false)
-    const onTimeUpdate = () => setCurrentTime(audio.currentTime)
-    const onDuration   = () => {
+    const handlePlay       = () => { setIsPlaying(true);  setIsBuffering(false); onPlay?.() }
+    const handlePause      = () => setIsPlaying(false)
+    const handleWaiting    = () => setIsBuffering(true)
+    const handleCanPlay    = () => setIsBuffering(false)
+    const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
+    const handleDuration   = () => {
       if (isFinite(audio.duration)) setDuration(audio.duration)
     }
-    const onEnded = () => {
+    const handleEnded = () => {
       setIsPlaying(false)
       setCurrentTime(0)
+      const listenedDuration = audio.duration
       audio.currentTime = 0
       markAsListened(poiId)
+      if (isFinite(listenedDuration)) onComplete?.(Math.round(listenedDuration))
     }
-    const onError = () => {
+    const handleError = () => {
       setIsBuffering(false)
       setHasError(true)
     }
 
-    audio.addEventListener('play', onPlay)
-    audio.addEventListener('pause', onPause)
-    audio.addEventListener('waiting', onWaiting)
-    audio.addEventListener('canplay', onCanPlay)
-    audio.addEventListener('timeupdate', onTimeUpdate)
-    audio.addEventListener('durationchange', onDuration)
-    audio.addEventListener('ended', onEnded)
-    audio.addEventListener('error', onError)
+    audio.addEventListener('play', handlePlay)
+    audio.addEventListener('pause', handlePause)
+    audio.addEventListener('waiting', handleWaiting)
+    audio.addEventListener('canplay', handleCanPlay)
+    audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('durationchange', handleDuration)
+    audio.addEventListener('ended', handleEnded)
+    audio.addEventListener('error', handleError)
 
     return () => {
-      audio.removeEventListener('play', onPlay)
-      audio.removeEventListener('pause', onPause)
-      audio.removeEventListener('waiting', onWaiting)
-      audio.removeEventListener('canplay', onCanPlay)
-      audio.removeEventListener('timeupdate', onTimeUpdate)
-      audio.removeEventListener('durationchange', onDuration)
-      audio.removeEventListener('ended', onEnded)
-      audio.removeEventListener('error', onError)
+      audio.removeEventListener('play', handlePlay)
+      audio.removeEventListener('pause', handlePause)
+      audio.removeEventListener('waiting', handleWaiting)
+      audio.removeEventListener('canplay', handleCanPlay)
+      audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('durationchange', handleDuration)
+      audio.removeEventListener('ended', handleEnded)
+      audio.removeEventListener('error', handleError)
       audio.pause()
     }
-  }, [poiId, markAsListened])
+  }, [poiId, markAsListened, onPlay, onComplete])
 
   // Reset state when the POI changes (navigation between detail pages)
   useEffect(() => {

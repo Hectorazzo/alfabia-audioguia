@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, useMemo, lazy, Suspense, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, MapPin, Leaf, ChevronRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react'
 import { useAppStore } from '@/stores/useAppStore'
@@ -6,6 +6,7 @@ import { useProgressStore } from '@/stores/useProgressStore'
 import { useProximity } from '@/hooks/useProximity'
 import { getPOIsWithTranslations } from '@/services/poiService'
 import AudioPlayer from '@/components/audio/AudioPlayer'
+import { trackPOIView, trackAudioPlay, trackAudioComplete } from '@/services/analyticsService'
 import type { POI, Translation, Language } from '@/lib/types'
 
 const MiniMap = lazy(() => import('@/components/map/MiniMap'))
@@ -155,6 +156,22 @@ export default function POIDetailPage() {
 
   const isClosing = current?.poi.number === 18
 
+  // Track poi_view once per POI (guard against language-change re-renders)
+  const trackedPoiRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!current || trackedPoiRef.current === current.poi.id) return
+    trackedPoiRef.current = current.poi.id
+    trackPOIView(current.poi.number)
+  }, [current])
+
+  const handleAudioPlay = useCallback(() => {
+    if (current) trackAudioPlay(current.poi.number, language)
+  }, [current, language])
+
+  const handleAudioComplete = useCallback((durationSeconds: number) => {
+    if (current) trackAudioComplete(current.poi.number, language, durationSeconds)
+  }, [current, language])
+
   function handleNext() {
     if (isClosing) {
       navigate('/closing')
@@ -277,6 +294,8 @@ export default function POIDetailPage() {
           poiId={poi.id}
           audioUrlOgg={translation.audioUrlOgg}
           audioUrlMp3={translation.audioUrlMp3}
+          onPlay={handleAudioPlay}
+          onComplete={handleAudioComplete}
         />
 
         {/* Description */}

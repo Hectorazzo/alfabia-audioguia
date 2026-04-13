@@ -8,6 +8,7 @@ import {
   estimateStorage,
   type AudioItem,
 } from '@/services/audioService'
+import { trackOfflineDownload } from '@/services/analyticsService'
 import DownloadProgress from './DownloadProgress'
 import StorageQuota from './StorageQuota'
 
@@ -137,6 +138,7 @@ export default function OfflineManager({ language, items }: OfflineManagerProps)
 
       setCachedLanguage(language)
       setDownloadState('complete')
+      trackOfflineDownload(language)
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return
       setDownloadState('error')

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAppStore, type Language } from '@/stores/useAppStore'
+import { trackLanguageSelect } from '@/services/analyticsService'
 
 interface LanguageOption {
   code: Language
@@ -33,6 +34,7 @@ export default function LanguagePage() {
   const [selected, setSelected] = useState<Language>(detectLanguage)
 
   function handleConfirm() {
+    trackLanguageSelect(selected)
     setLanguage(selected)
     navigate('/home', { replace: true })
   }

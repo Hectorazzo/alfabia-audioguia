@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { Loader2, AlertCircle } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import { useAppStore } from '@/stores/useAppStore'
+import { trackMapView } from '@/services/analyticsService'
 import { useProgressStore } from '@/stores/useProgressStore'
 import { getAllPOIs } from '@/services/poiService'
 import type { POI } from '@/lib/types'
@@ -127,6 +128,7 @@ export default function MapPage() {
 
   useEffect(() => {
     injectPulseKeyframes()
+    trackMapView()
   }, [])
 
   async function fetchPOIs() {

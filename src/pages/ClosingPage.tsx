@@ -1,6 +1,8 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Star, CalendarDays, MapPin, Phone, Globe, Home, Leaf } from 'lucide-react'
 import { useAppStore } from '@/stores/useAppStore'
+import { trackSessionEnd } from '@/services/analyticsService'
 import type { Language } from '@/lib/types'
 
 // ─── UI copy ─────────────────────────────────────────────────────────────────
@@ -116,6 +118,8 @@ export default function ClosingPage() {
   const navigate = useNavigate()
   const language = useAppStore((s) => s.language)
   const c = COPY[language]
+
+  useEffect(() => { trackSessionEnd() }, [])
 
   return (
     <div className="flex flex-col min-h-full pb-6">

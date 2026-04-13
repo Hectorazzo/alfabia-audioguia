@@ -82,6 +82,40 @@ CREATE POLICY "app_config: public read"
   TO anon
   USING (true);
 
+-- ─── Table: analytics_events ─────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS analytics_events (
+  id                        UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_type                TEXT        NOT NULL CHECK (event_type IN (
+                              'audio_play', 'audio_complete', 'poi_view',
+                              'language_select', 'session_start', 'session_end',
+                              'offline_download', 'map_view'
+                            )),
+  poi_number                SMALLINT,                    -- nullable
+  language                  TEXT,                        -- nullable
+  duration_listened_seconds SMALLINT,                    -- nullable, audio_complete only
+  session_id                TEXT        NOT NULL,
+  device_type               TEXT        CHECK (device_type IN ('ios', 'android', 'desktop')),
+  created_at                TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS analytics_events_type_idx       ON analytics_events (event_type);
+CREATE INDEX IF NOT EXISTS analytics_events_session_idx    ON analytics_events (session_id);
+CREATE INDEX IF NOT EXISTS analytics_events_created_at_idx ON analytics_events (created_at);
+
+-- RLS: visitors write, only service_role reads
+ALTER TABLE analytics_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "analytics_events: anon insert"
+  ON analytics_events FOR INSERT
+  TO anon
+  WITH CHECK (true);
+
+CREATE POLICY "analytics_events: service_role read"
+  ON analytics_events FOR SELECT
+  TO service_role
+  USING (true);
+
 -- ─── Storage bucket (run separately via Supabase dashboard / CLI) ─────────────
 -- Bucket name : 'audios'
 -- Visibility  : public
