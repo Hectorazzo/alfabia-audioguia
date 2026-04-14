@@ -1,94 +1,115 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Star, CalendarDays, MapPin, Phone, Globe, Home, Leaf } from 'lucide-react'
+import { Star, CalendarDays, MapPin, Phone, Globe, Home, Leaf, Headphones, Heart } from 'lucide-react'
 import { useAppStore } from '@/stores/useAppStore'
+import { useProgressStore } from '@/stores/useProgressStore'
 import { trackSessionEnd } from '@/services/analyticsService'
+import { supabase } from '@/services/supabase'
 import type { Language } from '@/lib/types'
 
 // ─── UI copy ─────────────────────────────────────────────────────────────────
 
 const COPY = {
   es: {
-    farewell:       'Hasta pronto',
-    farewellSub:    'Gracias por visitar los Jardines de Alfabia.',
-    farewellBody:   'Esperamos que este paseo os haya regalado un poco de la historia, la belleza y la tranquilidad que hacen de Alfabia un lugar único en Mallorca. Os esperamos de nuevo.',
-    reviewTitle:    'Compartid vuestra experiencia',
-    reviewBody:     'Vuestras valoraciones ayudan a otros viajeros a descubrir este rincón de la isla y nos permiten seguir cuidando este patrimonio.',
-    reviewButton:   'Valorar en Google',
-    eventsTitle:    'Alfabia para vuestros eventos',
-    eventsBody:     'Los jardines y las dependencias de la finca están disponibles para celebraciones privadas: bodas, comuniones, reuniones de empresa y actos culturales. A lo largo del año organizamos también conciertos al atardecer y visitas guiadas temáticas.',
-    eventsContact:  'Consultar disponibilidad',
-    contactTitle:   'Cómo llegar',
-    addressLine:    'Ctra. de Sóller, km 17 · Bunyola, Mallorca',
-    hoursLine:      'Abierto todos los días · Consultar horarios en web',
-    backButton:     'Volver al inicio',
+    farewell:        'Hasta pronto',
+    farewellSub:     'Gracias por visitar los Jardines de Alfabia.',
+    farewellBody:    'Esperamos que este paseo os haya regalado un poco de la historia, la belleza y la tranquilidad que hacen de Alfabia un lugar único en Mallorca. Os esperamos de nuevo.',
+    visitTitle:      'Tu visita',
+    listened:        'Audios escuchados',
+    favourites:      'Favoritos',
+    of:              'de',
+    reviewTitle:     'Compartid vuestra experiencia',
+    reviewBody:      'Vuestras valoraciones ayudan a otros viajeros a descubrir este rincón de la isla y nos permiten seguir cuidando este patrimonio.',
+    reviewButton:    'Valorar en Google',
+    eventsTitle:     'Alfabia para vuestros eventos',
+    eventsBody:      'Los jardines y las dependencias de la finca están disponibles para celebraciones privadas: bodas, comuniones, reuniones de empresa y actos culturales. A lo largo del año organizamos también conciertos al atardecer y visitas guiadas temáticas.',
+    eventsContact:   'Consultar disponibilidad',
+    contactTitle:    'Cómo llegar',
+    addressLine:     'Ctra. de Sóller, km 17 · Bunyola, Mallorca',
+    hoursLine:       'Abierto todos los días · Consultar horarios en web',
+    backButton:      'Volver al inicio',
   },
   en: {
-    farewell:       'Until next time',
-    farewellSub:    'Thank you for visiting Jardines de Alfabia.',
-    farewellBody:   'We hope this walk has given you a glimpse of the history, beauty and tranquillity that make Alfabia a unique place in Mallorca. We look forward to welcoming you again.',
-    reviewTitle:    'Share your experience',
-    reviewBody:     'Your reviews help other travellers discover this corner of the island and allow us to continue caring for this heritage.',
-    reviewButton:   'Review on Google',
-    eventsTitle:    'Alfabia for your events',
-    eventsBody:     'The gardens and estate buildings are available for private celebrations: weddings, corporate events, and cultural gatherings. Throughout the year we also host sunset concerts and themed guided tours.',
-    eventsContact:  'Check availability',
-    contactTitle:   'How to get here',
-    addressLine:    'Ctra. de Sóller, km 17 · Bunyola, Mallorca',
-    hoursLine:      'Open every day · Check hours on our website',
-    backButton:     'Back to home',
+    farewell:        'Until next time',
+    farewellSub:     'Thank you for visiting Jardines de Alfabia.',
+    farewellBody:    'We hope this walk has given you a glimpse of the history, beauty and tranquillity that make Alfabia a unique place in Mallorca. We look forward to welcoming you again.',
+    visitTitle:      'Your visit',
+    listened:        'Audios listened',
+    favourites:      'Favourites',
+    of:              'of',
+    reviewTitle:     'Share your experience',
+    reviewBody:      'Your reviews help other travellers discover this corner of the island and allow us to continue caring for this heritage.',
+    reviewButton:    'Review on Google',
+    eventsTitle:     'Alfabia for your events',
+    eventsBody:      'The gardens and estate buildings are available for private celebrations: weddings, corporate events, and cultural gatherings. Throughout the year we also host sunset concerts and themed guided tours.',
+    eventsContact:   'Check availability',
+    contactTitle:    'How to get here',
+    addressLine:     'Ctra. de Sóller, km 17 · Bunyola, Mallorca',
+    hoursLine:       'Open every day · Check hours on our website',
+    backButton:      'Back to home',
   },
   de: {
-    farewell:       'Bis zum nächsten Mal',
-    farewellSub:    'Vielen Dank für Ihren Besuch in den Jardines de Alfabia.',
-    farewellBody:   'Wir hoffen, dass dieser Spaziergang Ihnen einen Einblick in die Geschichte, Schönheit und Ruhe gegeben hat, die Alfabia zu einem einzigartigen Ort auf Mallorca machen. Wir freuen uns auf Ihren nächsten Besuch.',
-    reviewTitle:    'Teilen Sie Ihre Erfahrung',
-    reviewBody:     'Ihre Bewertungen helfen anderen Reisenden, diesen Ort zu entdecken, und ermöglichen es uns, dieses Kulturerbe zu pflegen.',
-    reviewButton:   'Auf Google bewerten',
-    eventsTitle:    'Alfabia für Ihre Veranstaltungen',
-    eventsBody:     'Die Gärten und Gebäude stehen für private Feiern zur Verfügung: Hochzeiten, Firmenevents und Kulturveranstaltungen. Im Laufe des Jahres veranstalten wir auch Abendkonzerte und thematische Führungen.',
-    eventsContact:  'Verfügbarkeit prüfen',
-    contactTitle:   'Anfahrt',
-    addressLine:    'Ctra. de Sóller, km 17 · Bunyola, Mallorca',
-    hoursLine:      'Täglich geöffnet · Öffnungszeiten auf der Website',
-    backButton:     'Zurück zur Startseite',
+    farewell:        'Bis zum nächsten Mal',
+    farewellSub:     'Vielen Dank für Ihren Besuch in den Jardines de Alfabia.',
+    farewellBody:    'Wir hoffen, dass dieser Spaziergang Ihnen einen Einblick in die Geschichte, Schönheit und Ruhe gegeben hat, die Alfabia zu einem einzigartigen Ort auf Mallorca machen. Wir freuen uns auf Ihren nächsten Besuch.',
+    visitTitle:      'Ihr Besuch',
+    listened:        'Angehörte Audios',
+    favourites:      'Favoriten',
+    of:              'von',
+    reviewTitle:     'Teilen Sie Ihre Erfahrung',
+    reviewBody:      'Ihre Bewertungen helfen anderen Reisenden, diesen Ort zu entdecken, und ermöglichen es uns, dieses Kulturerbe zu pflegen.',
+    reviewButton:    'Auf Google bewerten',
+    eventsTitle:     'Alfabia für Ihre Veranstaltungen',
+    eventsBody:      'Die Gärten und Gebäude stehen für private Feiern zur Verfügung: Hochzeiten, Firmenevents und Kulturveranstaltungen. Im Laufe des Jahres veranstalten wir auch Abendkonzerte und thematische Führungen.',
+    eventsContact:   'Verfügbarkeit prüfen',
+    contactTitle:    'Anfahrt',
+    addressLine:     'Ctra. de Sóller, km 17 · Bunyola, Mallorca',
+    hoursLine:       'Täglich geöffnet · Öffnungszeiten auf der Website',
+    backButton:      'Zurück zur Startseite',
   },
   ca: {
-    farewell:       'Fins aviat',
-    farewellSub:    'Gràcies per visitar els Jardins de Alfabia.',
-    farewellBody:   'Esperem que aquest passeig us hagi regalat una mica de la història, la bellesa i la tranquil·litat que fan d\'Alfabia un lloc únic a Mallorca. Us esperem de nou.',
-    reviewTitle:    'Compartiu la vostra experiència',
-    reviewBody:     'Les vostres valoracions ajuden altres viatgers a descobrir aquest racó de l\'illa i ens permeten continuar cuidant aquest patrimoni.',
-    reviewButton:   'Valorar a Google',
-    eventsTitle:    'Alfabia per als vostres esdeveniments',
-    eventsBody:     'Els jardins i les dependències de la finca estan disponibles per a celebracions privades: casaments, comunions, reunions d\'empresa i actes culturals. Al llarg de l\'any organitzem concerts al capvespre i visites guiades temàtiques.',
-    eventsContact:  'Consultar disponibilitat',
-    contactTitle:   'Com arribar-hi',
-    addressLine:    'Ctra. de Sóller, km 17 · Bunyola, Mallorca',
-    hoursLine:      'Obert tots els dies · Consultar horaris al web',
-    backButton:     'Tornar a l\'inici',
+    farewell:        'Fins aviat',
+    farewellSub:     'Gràcies per visitar els Jardins de Alfabia.',
+    farewellBody:    "Esperem que aquest passeig us hagi regalat una mica de la història, la bellesa i la tranquil·litat que fan d'Alfabia un lloc únic a Mallorca. Us esperem de nou.",
+    visitTitle:      'La teva visita',
+    listened:        'Àudios escoltats',
+    favourites:      'Preferits',
+    of:              'de',
+    reviewTitle:     'Compartiu la vostra experiència',
+    reviewBody:      "Les vostres valoracions ajuden altres viatgers a descobrir aquest racó de l'illa i ens permeten continuar cuidant aquest patrimoni.",
+    reviewButton:    'Valorar a Google',
+    eventsTitle:     'Alfabia per als vostres esdeveniments',
+    eventsBody:      "Els jardins i les dependències de la finca estan disponibles per a celebracions privades: casaments, comunions, reunions d'empresa i actes culturals. Al llarg de l'any organitzem concerts al capvespre i visites guiades temàtiques.",
+    eventsContact:   'Consultar disponibilitat',
+    contactTitle:    'Com arribar-hi',
+    addressLine:     'Ctra. de Sóller, km 17 · Bunyola, Mallorca',
+    hoursLine:       'Obert tots els dies · Consultar horaris al web',
+    backButton:      "Tornar a l'inici",
   },
   fr: {
-    farewell:       'À bientôt',
-    farewellSub:    'Merci d\'avoir visité les Jardins de Alfabia.',
-    farewellBody:   'Nous espérons que cette promenade vous a offert un aperçu de l\'histoire, de la beauté et de la tranquillité qui font d\'Alfabia un lieu unique à Majorque. Nous espérons vous accueillir à nouveau.',
-    reviewTitle:    'Partagez votre expérience',
-    reviewBody:     'Vos avis aident d\'autres voyageurs à découvrir ce lieu et nous permettent de continuer à préserver ce patrimoine.',
-    reviewButton:   'Laisser un avis sur Google',
-    eventsTitle:    'Alfabia pour vos événements',
-    eventsBody:     'Les jardins et les bâtiments sont disponibles pour des célébrations privées : mariages, événements d\'entreprise et manifestations culturelles. Tout au long de l\'année, nous organisons également des concerts au coucher du soleil et des visites guidées thématiques.',
-    eventsContact:  'Vérifier les disponibilités',
-    contactTitle:   'Comment s\'y rendre',
-    addressLine:    'Ctra. de Sóller, km 17 · Bunyola, Mallorca',
-    hoursLine:      'Ouvert tous les jours · Consulter les horaires sur le site',
-    backButton:     'Retour à l\'accueil',
+    farewell:        'À bientôt',
+    farewellSub:     "Merci d'avoir visité les Jardins de Alfabia.",
+    farewellBody:    "Nous espérons que cette promenade vous a offert un aperçu de l'histoire, de la beauté et de la tranquillité qui font d'Alfabia un lieu unique à Majorque. Nous espérons vous accueillir à nouveau.",
+    visitTitle:      'Votre visite',
+    listened:        'Audios écoutés',
+    favourites:      'Favoris',
+    of:              'sur',
+    reviewTitle:     'Partagez votre expérience',
+    reviewBody:      "Vos avis aident d'autres voyageurs à découvrir ce lieu et nous permettent de continuer à préserver ce patrimoine.",
+    reviewButton:    'Laisser un avis sur Google',
+    eventsTitle:     'Alfabia pour vos événements',
+    eventsBody:      "Les jardins et les bâtiments sont disponibles pour des célébrations privées : mariages, événements d'entreprise et manifestations culturelles. Tout au long de l'année, nous organisons également des concerts au coucher du soleil et des visites guidées thématiques.",
+    eventsContact:   'Vérifier les disponibilités',
+    contactTitle:    "Comment s'y rendre",
+    addressLine:     'Ctra. de Sóller, km 17 · Bunyola, Mallorca',
+    hoursLine:       'Ouvert tous les jours · Consulter les horaires sur le site',
+    backButton:      "Retour à l'accueil",
   },
 } satisfies Record<Language, Record<string, string>>
 
-// Google Reviews URL — replace PLACEHOLDER with the real Google Place ID
-// Found in Google Maps: share → copy link → extract the CID or use Place ID from Places API
-const GOOGLE_REVIEW_URL = 'https://g.page/r/PLACEHOLDER_REPLACE_WITH_REAL_PLACE_ID/review'
-const WEBSITE_URL       = 'https://www.jardinesdealfabia.com'
+const TOTAL_POIS   = 18
+const WEBSITE_URL  = 'https://www.jardinesdealfabia.com'
+const FALLBACK_REVIEW_URL = 'https://g.page/r/CUV1HNUwFPQeEBE/review'
 
 // ─── Section card ─────────────────────────────────────────────────────────────
 
@@ -115,11 +136,37 @@ function Section({
 // ─── ClosingPage ─────────────────────────────────────────────────────────────
 
 export default function ClosingPage() {
-  const navigate = useNavigate()
-  const language = useAppStore((s) => s.language)
-  const c = COPY[language]
+  const navigate  = useNavigate()
+  const language  = useAppStore((s) => s.language)
+  const c         = COPY[language]
 
-  useEffect(() => { trackSessionEnd() }, [])
+  const listenedPOIs = useProgressStore((s) => s.listenedPOIs)
+  const favorites    = useProgressStore((s) => s.favorites)
+  const resetProgress = useProgressStore((s) => s.reset)
+
+  const [reviewUrl, setReviewUrl] = useState<string>(FALLBACK_REVIEW_URL)
+
+  // Fetch Google Review URL from app_config and track session end
+  useEffect(() => {
+    trackSessionEnd()
+
+    supabase
+      .from('app_config')
+      .select('value')
+      .eq('key', 'review_url_google')
+      .single<{ value: string }>()
+      .then(({ data }) => {
+        if (data?.value) setReviewUrl(data.value)
+      })
+  }, [])
+
+  function handleBackToHome() {
+    resetProgress()
+    navigate('/')
+  }
+
+  const listenedCount  = listenedPOIs.length
+  const favouriteCount = favorites.length
 
   return (
     <div className="flex flex-col min-h-full pb-6">
@@ -146,13 +193,36 @@ export default function ClosingPage() {
       {/* ── Content cards ──────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-4 px-4 pt-5">
 
+        {/* Visit summary */}
+        <Section icon={<Headphones className="w-5 h-5" />} title={c.visitTitle}>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col items-center gap-1 bg-alfabia-cream rounded-xl py-3">
+              <span className="text-2xl font-bold text-alfabia-green">{listenedCount}</span>
+              <span className="text-xs text-alfabia-text-muted text-center leading-tight">
+                {c.listened}
+                <br />
+                <span className="text-alfabia-accent">{c.of} {TOTAL_POIS}</span>
+              </span>
+            </div>
+            <div className="flex flex-col items-center gap-1 bg-alfabia-cream rounded-xl py-3">
+              <span className="text-2xl font-bold text-alfabia-green flex items-center gap-1">
+                {favouriteCount}
+                <Heart className="w-4 h-4 fill-current" />
+              </span>
+              <span className="text-xs text-alfabia-text-muted text-center leading-tight">
+                {c.favourites}
+              </span>
+            </div>
+          </div>
+        </Section>
+
         {/* Google Reviews */}
         <Section icon={<Star className="w-5 h-5" />} title={c.reviewTitle}>
           <p className="text-sm text-alfabia-text-muted leading-relaxed">
             {c.reviewBody}
           </p>
           <a
-            href={GOOGLE_REVIEW_URL}
+            href={reviewUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl border-2 border-alfabia-green text-alfabia-green text-sm font-semibold transition-colors active:bg-alfabia-green active:text-alfabia-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-alfabia-green"
@@ -216,15 +286,28 @@ export default function ClosingPage() {
           </div>
         </Section>
 
-        {/* Back to home */}
+        {/* Back to home — resets progress */}
         <button
           type="button"
-          onClick={() => navigate('/home')}
+          onClick={handleBackToHome}
           className="flex items-center justify-center gap-2 w-full py-3 px-6 bg-alfabia-cream border border-alfabia-border rounded-xl text-sm font-medium text-alfabia-text transition-colors active:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-alfabia-green"
         >
           <Home className="w-4 h-4" />
           {c.backButton}
         </button>
+
+        {/* Credits */}
+        <p className="text-center text-xs text-alfabia-text-muted pb-2">
+          A digital experience by{' '}
+          <a
+            href="https://punk.solutions/en"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-alfabia-accent underline underline-offset-2 hover:text-alfabia-green transition-colors"
+          >
+            Punk Solutions
+          </a>
+        </p>
 
       </div>
     </div>
