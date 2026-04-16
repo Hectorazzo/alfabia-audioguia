@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAppStore } from '@/stores/useAppStore'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { getPOIsWithTranslations } from '@/services/poiService'
 import OfflineManager from '@/components/offline/OfflineManager'
 import type { Language, POI, Translation } from '@/lib/types'
@@ -56,7 +57,7 @@ const COPY = {
 
 export default function SettingsPage() {
   const language = useAppStore((s) => s.language)
-  const setLanguage = useAppStore((s) => s.setLanguage)
+  const { setLanguage } = useLanguage()
   const copy = COPY[language]
 
   // POI items needed by OfflineManager to build audio download list

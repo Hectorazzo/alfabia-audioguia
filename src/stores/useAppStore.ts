@@ -9,6 +9,17 @@ export interface UserPosition {
   accuracy: number
 }
 
+const VALID_LANGUAGES: Language[] = ['es', 'en', 'de', 'ca', 'fr']
+
+/** Read language from localStorage so the store is correct before the context mounts */
+function getInitialLanguage(): Language {
+  try {
+    const stored = localStorage.getItem('alfabia_lang')
+    if (stored && VALID_LANGUAGES.includes(stored as Language)) return stored as Language
+  } catch { /* private mode or storage unavailable */ }
+  return 'es'
+}
+
 interface AppState {
   language: Language
   userPosition: UserPosition | null
@@ -24,7 +35,7 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>()((set) => ({
-  language: 'es',
+  language: getInitialLanguage(),
   userPosition: null,
   nearbyPOIs: [],
   selectedPOI: null,
