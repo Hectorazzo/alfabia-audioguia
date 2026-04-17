@@ -95,9 +95,7 @@ export default defineConfig({
             return 'vendor-supabase'
           if (id.includes('leaflet') || id.includes('react-leaflet'))
             return 'vendor-leaflet'
-          if (id.includes('lottie') || id.includes('dotlottie'))
-            return 'vendor-lottie'
-          return 'vendor-misc'
+return 'vendor-misc'
         },
       },
     },

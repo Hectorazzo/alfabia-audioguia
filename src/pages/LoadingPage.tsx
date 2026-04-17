@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { DotLottieReact } from '@lottiefiles/dotlottie-react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useAppStore } from '@/stores/useAppStore'
 import { useOfflineStore } from '@/stores/useOfflineStore'
@@ -75,10 +74,9 @@ export default function LoadingPage() {
     setDownloadState,
   } = useOfflineStore()
 
-  const [progress,    setProgress]    = useState(0)
-  const [done,        setDone]        = useState(0)
-  const [total,       setTotal]       = useState(TOTAL_AUDIOS)
-  const [lottieError, setLottieError] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [done,     setDone]     = useState(0)
+  const [total,    setTotal]    = useState(TOTAL_AUDIOS)
 
   const abortRef = useRef(new AbortController())
   const lang     = language ?? appLang
@@ -177,16 +175,22 @@ export default function LoadingPage() {
       {/* ── Main content ── */}
       <div className="flex-1 flex flex-col items-center justify-center gap-6 w-full max-w-xs">
 
-        {/* Lottie animation (hidden if CDN unavailable) */}
-        {!lottieError && (
-          <DotLottieReact
-            src="https://lottie.host/2b523f9c-4175-41b6-8bf1-14ea20344867/ENTXesz1Ho.lottie"
-            loop
-            autoplay
-            onError={() => setLottieError(true)}
-            style={{ width: 200, height: 200 }}
-          />
-        )}
+        {/* Logo con animación CSS pulse — sin dependencias externas, funciona offline */}
+        <img
+          src="/Alfabia_Vertical_Positivo.png"
+          alt="Jardines de Alfabia"
+          style={{
+            width: 120,
+            marginBottom: '2rem',
+            animation: 'gentle-pulse 2s ease-in-out infinite',
+          }}
+        />
+        <style>{`
+          @keyframes gentle-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.85; }
+            50% { transform: scale(1.06); opacity: 1; }
+          }
+        `}</style>
 
         {/* Status text */}
         <p
