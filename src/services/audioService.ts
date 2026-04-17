@@ -86,6 +86,107 @@ export async function downloadAudiosForLanguage(
   }
 }
 
+// ─── Parallel download ────────────────────────────────────────────────────────
+
+/**
+ * Download audio files in parallel (up to `concurrency` at once) into Cache
+ * Storage. Already-cached entries are skipped. Each failed item is retried up
+ * to `maxRetries` times before being silently skipped so the overall download
+ * always completes.
+ */
+export async function downloadAudiosParallel(
+  language: Language,
+  items: AudioItem[],
+  callbacks: DownloadCallbacks,
+  signal?: AbortSignal,
+  concurrency = 3,
+  maxRetries = 2,
+): Promise<void> {
+  if (!cacheAvailable()) return
+
+  const cache = await caches.open(audioCacheName(language))
+  const total = items.length
+  let completed = 0
+
+  // Check what is already in cache
+  const hits = await Promise.all(items.map((item) => cache.match(item.audioUrl).then(Boolean)))
+
+  // Report already-cached items immediately
+  for (let i = 0; i < items.length; i++) {
+    if (hits[i]) {
+      completed++
+      callbacks.onProgress(completed, total, items[i].poiId)
+    }
+  }
+
+  const pending = items.filter((_, i) => !hits[i])
+
+  // Process uncached items in batches of `concurrency`
+  for (let i = 0; i < pending.length; i += concurrency) {
+    if (signal?.aborted) throw new DOMException('Download cancelled', 'AbortError')
+
+    const batch = pending.slice(i, i + concurrency)
+
+    await Promise.allSettled(
+      batch.map(async ({ poiId, audioUrl }) => {
+        let attempts = maxRetries + 1
+
+        while (attempts > 0) {
+          if (signal?.aborted) return
+
+          const inner = new AbortController()
+          const timeoutId = setTimeout(() => inner.abort(), FETCH_TIMEOUT_MS)
+          const onParentAbort = () => inner.abort()
+          signal?.addEventListener('abort', onParentAbort, { once: true })
+
+          try {
+            const resp = await fetch(audioUrl, { signal: inner.signal })
+            clearTimeout(timeoutId)
+            signal?.removeEventListener('abort', onParentAbort)
+
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`)
+            await cache.put(audioUrl, resp)
+
+            completed++
+            callbacks.onProgress(completed, total, poiId)
+            return
+          } catch (err) {
+            clearTimeout(timeoutId)
+            signal?.removeEventListener('abort', onParentAbort)
+
+            if (signal?.aborted) return
+            attempts--
+
+            if (attempts === 0) {
+              callbacks.onItemError(err, poiId)
+              completed++
+              callbacks.onProgress(completed, total, poiId)
+            } else {
+              await new Promise((r) => setTimeout(r, 800))
+            }
+          }
+        }
+      }),
+    )
+  }
+}
+
+// ─── All cached check ─────────────────────────────────────────────────────────
+
+/**
+ * Returns true if all provided audio URLs are already in the cache for this
+ * language. Fast-path check for returning visitors.
+ */
+export async function areAllAudiosCached(
+  language: Language,
+  items: AudioItem[],
+): Promise<boolean> {
+  if (!cacheAvailable() || items.length === 0) return false
+  const cache = await caches.open(audioCacheName(language))
+  const hits = await Promise.all(items.map((item) => cache.match(item.audioUrl).then(Boolean)))
+  return hits.every(Boolean)
+}
+
 // ─── Clear ────────────────────────────────────────────────────────────────────
 
 /**

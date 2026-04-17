@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import BottomNav from './BottomNav'
 
-const ROUTES_WITHOUT_NAV = new Set(['/'])
+const ROUTES_WITHOUT_NAV = new Set(['/', '/loading'])
 
 export default function AppShell() {
   const { pathname } = useLocation()

@@ -1,29 +1,51 @@
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import { lazy, Suspense, type ReactNode } from 'react'
 import AppShell from '@/components/layout/AppShell'
-import WelcomePage from '@/pages/WelcomePage'
-import HomePage from '@/pages/HomePage'
-import POIDetailPage from '@/pages/POIDetailPage'
-import ClosingPage from '@/pages/ClosingPage'
-import SettingsPage from '@/pages/SettingsPage'
 import { LanguageProvider, useLanguage } from '@/contexts/LanguageContext'
 
-// Lazy-load MapPage — Leaflet is heavy
-const MapPage = lazy(() => import('@/pages/MapPage'))
+// ─── Lazy-loaded pages (one chunk per route) ──────────────────────────────────
+// Only AppShell + the two guards are loaded upfront. Everything else is split.
 
-/** Index route: show WelcomePage if no language chosen, otherwise redirect to /home */
+const WelcomePage  = lazy(() => import('@/pages/WelcomePage'))
+const LoadingPage  = lazy(() => import('@/pages/LoadingPage'))
+const HomePage     = lazy(() => import('@/pages/HomePage'))
+const POIDetailPage = lazy(() => import('@/pages/POIDetailPage'))
+const MapPage      = lazy(() => import('@/pages/MapPage'))
+const ClosingPage  = lazy(() => import('@/pages/ClosingPage'))
+const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
+
+// ─── Shared fallback ──────────────────────────────────────────────────────────
+
+function PageFallback() {
+  return (
+    <div
+      className="flex flex-1 min-h-svh items-center justify-center"
+      style={{ backgroundColor: '#F8F2E7' }}
+    />
+  )
+}
+
+// ─── Route guards ─────────────────────────────────────────────────────────────
+
+/** Index route — show WelcomePage if no language chosen, otherwise /home */
 function RootRoute() {
   const { language } = useLanguage()
   if (language !== null) return <Navigate to="/home" replace />
-  return <WelcomePage />
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <WelcomePage />
+    </Suspense>
+  )
 }
 
-/** Guard: redirect to / if no language has been selected yet */
+/** Redirect to / if the user hasn't chosen a language yet */
 function RequireLanguage({ children }: { children: ReactNode }) {
   const { language } = useLanguage()
   if (language === null) return <Navigate to="/" replace />
   return <>{children}</>
 }
+
+// ─── App ──────────────────────────────────────────────────────────────────────
 
 export default function App() {
   return (
@@ -31,14 +53,43 @@ export default function App() {
       <LanguageProvider>
         <Routes>
           <Route element={<AppShell />}>
+
+            {/* Public */}
             <Route index element={<RootRoute />} />
+
+            {/* After language selection — no language guard for /loading itself
+                (LoadingPage internally redirects to / if language is missing) */}
+            <Route
+              path="/loading"
+              element={
+                <RequireLanguage>
+                  <Suspense fallback={<PageFallback />}>
+                    <LoadingPage />
+                  </Suspense>
+                </RequireLanguage>
+              }
+            />
+
+            {/* Protected — require language */}
             <Route
               path="/home"
-              element={<RequireLanguage><HomePage /></RequireLanguage>}
+              element={
+                <RequireLanguage>
+                  <Suspense fallback={<PageFallback />}>
+                    <HomePage />
+                  </Suspense>
+                </RequireLanguage>
+              }
             />
             <Route
               path="/poi/:id"
-              element={<RequireLanguage><POIDetailPage /></RequireLanguage>}
+              element={
+                <RequireLanguage>
+                  <Suspense fallback={<PageFallback />}>
+                    <POIDetailPage />
+                  </Suspense>
+                </RequireLanguage>
+              }
             />
             <Route
               path="/map"
@@ -56,12 +107,25 @@ export default function App() {
             />
             <Route
               path="/closing"
-              element={<RequireLanguage><ClosingPage /></RequireLanguage>}
+              element={
+                <RequireLanguage>
+                  <Suspense fallback={<PageFallback />}>
+                    <ClosingPage />
+                  </Suspense>
+                </RequireLanguage>
+              }
             />
             <Route
               path="/settings"
-              element={<RequireLanguage><SettingsPage /></RequireLanguage>}
+              element={
+                <RequireLanguage>
+                  <Suspense fallback={<PageFallback />}>
+                    <SettingsPage />
+                  </Suspense>
+                </RequireLanguage>
+              }
             />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

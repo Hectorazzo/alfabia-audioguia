@@ -81,4 +81,25 @@ export default defineConfig({
       '@': resolve(__dirname, 'src'),
     },
   },
+
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined
+          if (id.includes('react-dom') || id.includes('react/') || id.includes('scheduler'))
+            return 'vendor-react'
+          if (id.includes('react-router'))
+            return 'vendor-router'
+          if (id.includes('supabase') || id.includes('postgrest') || id.includes('realtime'))
+            return 'vendor-supabase'
+          if (id.includes('leaflet') || id.includes('react-leaflet'))
+            return 'vendor-leaflet'
+          if (id.includes('lottie') || id.includes('dotlottie'))
+            return 'vendor-lottie'
+          return 'vendor-misc'
+        },
+      },
+    },
+  },
 })

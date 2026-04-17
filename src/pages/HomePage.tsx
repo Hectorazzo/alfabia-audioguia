@@ -7,7 +7,6 @@ import { getPOIsWithTranslations } from '@/services/poiService'
 import { trackSessionStart } from '@/services/analyticsService'
 import POIList, { type POIWithTranslation } from '@/components/poi/POIList'
 import POICard from '@/components/poi/POICard'
-import OfflineManager from '@/components/offline/OfflineManager'
 import type { Language } from '@/lib/types'
 
 // ─── UI copy ─────────────────────────────────────────────────────────────────
@@ -140,7 +139,7 @@ export default function HomePage() {
   const nearbyPOIs = useAppStore((s) => s.nearbyPOIs)
   const userPosition = useAppStore((s) => s.userPosition)
 
-  const [activeTab, setActiveTab] = useState<Tab>('nearby')
+  const [activeTab, setActiveTab] = useState<Tab>('all')
   const [allItems, setAllItems] = useState<POIWithTranslation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -200,7 +199,7 @@ export default function HomePage() {
       {/* ── Tabs ── */}
       <div className="px-4 pb-3 bg-alfabia-cream sticky top-0 z-10 border-b border-alfabia-border">
         <div className="flex gap-1 bg-alfabia-border/40 rounded-xl p-1">
-          {(['nearby', 'all'] as Tab[]).map((tab) => (
+          {(['all', 'nearby'] as Tab[]).map((tab) => (
             <button
               key={tab}
               type="button"
@@ -261,12 +260,6 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* ── Offline manager (fixed above bottom nav) ── */}
-      {!loading && !error && allItems.length > 0 && (
-        <div className="shrink-0 px-4 py-3 bg-alfabia-cream border-t border-alfabia-border">
-          <OfflineManager language={language} items={allItems} />
-        </div>
-      )}
     </div>
   )
 }

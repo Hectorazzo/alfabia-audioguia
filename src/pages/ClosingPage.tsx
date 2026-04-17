@@ -109,7 +109,10 @@ const COPY = {
 
 const TOTAL_POIS   = 18
 const WEBSITE_URL  = 'https://www.jardinesdealfabia.com'
-const FALLBACK_REVIEW_URL = 'https://g.page/r/CUV1HNUwFPQeEBE/review'
+// Format: https://search.google.com/local/writereview?placeid=<PLACE_ID>
+// The place_id for Jardines de Alfabia is stored in app_config.review_url_google (Supabase).
+// This fallback is used only when the network request fails.
+const FALLBACK_REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJU1swFPQeEBERTdh1SzWp-UU'
 
 // ─── Section card ─────────────────────────────────────────────────────────────
 
@@ -182,7 +185,7 @@ export default function ClosingPage() {
           <Leaf className="w-8 h-8 text-alfabia-cream" />
         </div>
         <div className="space-y-2">
-          <h1 className="font-display text-3xl text-alfabia-cream">{c.farewell}</h1>
+          <h1 className="font-display text-3xl text-white">{c.farewell}</h1>
           <p className="text-sm font-medium text-alfabia-cream/80">{c.farewellSub}</p>
         </div>
         <p className="text-sm text-alfabia-cream/65 leading-relaxed max-w-xs">
@@ -298,7 +301,7 @@ export default function ClosingPage() {
 
         {/* Credits */}
         <p className="text-center text-xs text-alfabia-text-muted pb-2">
-          A digital experience by{' '}
+          A digital experience — with ❤️ — by{' '}
           <a
             href="https://punk.solutions/en"
             target="_blank"

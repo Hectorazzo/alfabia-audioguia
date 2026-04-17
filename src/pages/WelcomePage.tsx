@@ -16,7 +16,7 @@ export default function WelcomePage() {
 
   function handleSelect(code: Language) {
     setLanguage(code)
-    navigate('/home')
+    navigate('/loading')
   }
 
   return (

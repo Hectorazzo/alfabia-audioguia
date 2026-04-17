@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react'
 import { useAppStore } from '@/stores/useAppStore'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { getPOIsWithTranslations } from '@/services/poiService'
-import OfflineManager from '@/components/offline/OfflineManager'
-import type { Language, POI, Translation } from '@/lib/types'
+import { useOfflineStore } from '@/stores/useOfflineStore'
+import type { Language } from '@/lib/types'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -22,36 +20,48 @@ const LANGUAGES: LanguageOption[] = [
 
 const COPY = {
   es: {
-    title: 'Ajustes',
-    langSection: 'Idioma',
+    title:          'Ajustes',
+    langSection:    'Idioma',
     offlineSection: 'Modo offline',
+    audiosCached:   (n: number, t: number) => `Audios descargados: ${n}/${t} ✓`,
+    audiosNone:     'Audios no descargados',
     creditsSection: 'Créditos',
   },
   en: {
-    title: 'Settings',
-    langSection: 'Language',
+    title:          'Settings',
+    langSection:    'Language',
     offlineSection: 'Offline mode',
+    audiosCached:   (n: number, t: number) => `Downloaded audio: ${n}/${t} ✓`,
+    audiosNone:     'Audio not downloaded',
     creditsSection: 'Credits',
   },
   de: {
-    title: 'Einstellungen',
-    langSection: 'Sprache',
+    title:          'Einstellungen',
+    langSection:    'Sprache',
     offlineSection: 'Offline-Modus',
+    audiosCached:   (n: number, t: number) => `Audios heruntergeladen: ${n}/${t} ✓`,
+    audiosNone:     'Audios nicht heruntergeladen',
     creditsSection: 'Impressum',
   },
   ca: {
-    title: 'Ajustos',
-    langSection: 'Llengua',
+    title:          'Ajustos',
+    langSection:    'Llengua',
     offlineSection: 'Mode offline',
+    audiosCached:   (n: number, t: number) => `Àudios descarregats: ${n}/${t} ✓`,
+    audiosNone:     'Àudios no descarregats',
     creditsSection: 'Crèdits',
   },
   fr: {
-    title: 'Paramètres',
-    langSection: 'Langue',
+    title:          'Paramètres',
+    langSection:    'Langue',
     offlineSection: 'Mode hors ligne',
+    audiosCached:   (n: number, t: number) => `Audios téléchargés\u00a0: ${n}/${t} ✓`,
+    audiosNone:     'Audios non téléchargés',
     creditsSection: 'Crédits',
   },
-} satisfies Record<Language, Record<string, string>>
+} satisfies Record<Language, Record<string, string | ((n: number, t: number) => string)>>
+
+const TOTAL_AUDIOS = 18
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -60,26 +70,23 @@ export default function SettingsPage() {
   const { setLanguage } = useLanguage()
   const copy = COPY[language]
 
-  // POI items needed by OfflineManager to build audio download list
-  const [items, setItems] = useState<Array<{ poi: POI; translation: Translation }>>([])
+  const cachedAudios   = useOfflineStore((s) => s.cachedAudios)
+  const cachedLanguage = useOfflineStore((s) => s.cachedLanguage)
 
-  useEffect(() => {
-    getPOIsWithTranslations(language)
-      .then(setItems)
-      .catch(() => {/* No network — OfflineManager shows cached state only */})
-  }, [language])
+  const cachedCount = cachedLanguage === language ? cachedAudios.length : 0
+  const allCached   = cachedCount >= TOTAL_AUDIOS
 
   return (
     <div className="flex flex-col min-h-full bg-alfabia-cream pb-20">
       {/* ── Header ── */}
       <div className="px-4 pt-6 pb-4 border-b border-alfabia-border">
-        <h1 className="font-display text-2xl text-alfabia-green-dark">{copy.title}</h1>
+        <h1 className="font-display text-2xl text-alfabia-green-dark">{copy.title as string}</h1>
       </div>
 
       {/* ── Language section ── */}
       <section className="px-4 pt-5 pb-2">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-alfabia-text-muted mb-3">
-          {copy.langSection}
+          {copy.langSection as string}
         </h2>
 
         <div className="flex flex-col gap-2">
@@ -119,12 +126,18 @@ export default function SettingsPage() {
 
       <div className="mx-4 my-4 border-t border-alfabia-border" />
 
-      {/* ── Offline section ── */}
+      {/* ── Offline section — discrete cache status indicator ── */}
       <section className="px-4 pb-2">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-alfabia-text-muted mb-3">
-          {copy.offlineSection}
+          {copy.offlineSection as string}
         </h2>
-        <OfflineManager language={language} items={items} />
+        <p className={`text-sm ${allCached ? 'text-emerald-700' : 'text-alfabia-text-muted'}`}>
+          {allCached
+            ? (copy.audiosCached as (n: number, t: number) => string)(cachedCount, TOTAL_AUDIOS)
+            : cachedCount > 0
+              ? (copy.audiosCached as (n: number, t: number) => string)(cachedCount, TOTAL_AUDIOS)
+              : copy.audiosNone as string}
+        </p>
       </section>
 
       <div className="mx-4 my-4 border-t border-alfabia-border" />
@@ -132,24 +145,19 @@ export default function SettingsPage() {
       {/* ── Credits section ── */}
       <section className="px-4 pb-4">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-alfabia-text-muted mb-3">
-          {copy.creditsSection}
+          {copy.creditsSection as string}
         </h2>
-        <div className="text-sm text-alfabia-text-muted leading-relaxed space-y-1">
-          <p>Audioguía Digital Plus</p>
-          <p>Jardines de Alfabia</p>
-          <p>
-            Desarrollado por{' '}
-            <a
-              href="https://punk.solutions"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-alfabia-accent underline underline-offset-2 hover:text-alfabia-green transition-colors"
-            >
-              Punk Solutions
-            </a>
-          </p>
-          <p className="text-xs text-alfabia-border mt-2">punk.solutions</p>
-        </div>
+        <p className="text-sm text-alfabia-text-muted">
+          A digital experience — with ❤️ — by{' '}
+          <a
+            href="https://punk.solutions/en"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-alfabia-accent underline underline-offset-2 hover:text-alfabia-green transition-colors"
+          >
+            Punk Solutions
+          </a>
+        </p>
       </section>
     </div>
   )
