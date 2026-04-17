@@ -185,7 +185,7 @@ export default function ClosingPage() {
           <Leaf className="w-8 h-8 text-alfabia-cream" />
         </div>
         <div className="space-y-2">
-          <h1 className="font-display text-3xl text-white">{c.farewell}</h1>
+          <h1 className="font-display text-3xl text-white" style={{ color: '#FFFFFF' }}>{c.farewell}</h1>
           <p className="text-sm font-medium text-alfabia-cream/80">{c.farewellSub}</p>
         </div>
         <p className="text-sm text-alfabia-cream/65 leading-relaxed max-w-xs">
