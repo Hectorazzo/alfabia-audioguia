@@ -85,6 +85,8 @@ export default function LoadingPage() {
   const msgs     = MSGS[lang]
 
   useEffect(() => {
+    console.log('LoadingPage mounted, checking cache...')
+
     // Guard: no language selected
     if (!language) {
       navigate('/', { replace: true })
@@ -110,15 +112,17 @@ export default function LoadingPage() {
           cachedLanguage === lang && cachedAudios.length >= audioItems.length
 
         // Double-check with Cache API for accuracy
-        const cacheComplete = storeComplete
+        const allCached = storeComplete
           ? true
           : await areAllAudiosCached(lang, audioItems)
 
-        if (cacheComplete) {
-          // Already fully cached — show brief animation and proceed
+        console.log('Cache check result:', allCached)
+
+        if (allCached) {
+          // Already fully cached — show animation for at least 1.5 s
           setProgress(100)
           setDone(audioItems.length)
-          await new Promise((r) => setTimeout(r, 400))
+          await new Promise((r) => setTimeout(r, 1500))
           if (!ctrl.signal.aborted) navigate('/home', { replace: true })
           return
         }

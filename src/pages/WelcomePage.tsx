@@ -83,7 +83,15 @@ export default function WelcomePage() {
         className="text-center leading-relaxed mt-8"
         style={{ fontSize: '0.65rem', color: '#6B7280', letterSpacing: '0.02em' }}
       >
-        Próximamente: audioguía digital interactiva · Coming soon: interactive digital audioguide
+        A digital experience — with ❤️ — by{' '}
+        <a
+          href="https://punk.solutions/en"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#6B7280', textDecoration: 'underline', textUnderlineOffset: '2px' }}
+        >
+          Punk Solutions
+        </a>
       </p>
     </div>
   )

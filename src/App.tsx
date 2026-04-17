@@ -27,10 +27,10 @@ function PageFallback() {
 
 // ─── Route guards ─────────────────────────────────────────────────────────────
 
-/** Index route — show WelcomePage if no language chosen, otherwise /home */
+/** Index route — show WelcomePage if no language chosen, otherwise /loading */
 function RootRoute() {
   const { language } = useLanguage()
-  if (language !== null) return <Navigate to="/home" replace />
+  if (language !== null) return <Navigate to="/loading" replace />
   return (
     <Suspense fallback={<PageFallback />}>
       <WelcomePage />
