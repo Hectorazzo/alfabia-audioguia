@@ -1,19 +1,16 @@
 import { NavLink } from 'react-router-dom'
 import { Home, Map, Settings } from 'lucide-react'
-
-interface NavItem {
-  to: string
-  icon: React.ReactNode
-  label: string
-}
-
-const navItems: NavItem[] = [
-  { to: '/home', icon: <Home size={24} />, label: 'Inicio' },
-  { to: '/map', icon: <Map size={24} />, label: 'Mapa' },
-  { to: '/settings', icon: <Settings size={24} />, label: 'Ajustes' },
-]
+import { useT } from '@/i18n/translations'
 
 export default function BottomNav() {
+  const t = useT()
+
+  const navItems = [
+    { to: '/home', icon: <Home size={24} />, label: t('home') },
+    { to: '/map', icon: <Map size={24} />, label: t('map') },
+    { to: '/settings', icon: <Settings size={24} />, label: t('settings') },
+  ]
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 flex h-16 items-center justify-around border-t border-alfabia-border bg-alfabia-cream">
       {navItems.map(({ to, icon, label }) => (
