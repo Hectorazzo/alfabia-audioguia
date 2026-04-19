@@ -44,7 +44,7 @@ const COPY = {
     creditsSection: 'Impressum',
   },
   ca: {
-    title:          'Ajustos',
+    title:          'Configuració',
     langSection:    'Llengua',
     offlineSection: 'Mode offline',
     audiosCached:   (n: number, t: number) => `Àudios descarregats: ${n}/${t} ✓`,
