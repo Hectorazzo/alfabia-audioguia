@@ -204,7 +204,7 @@ const translations: Record<Language, Translations> = {
   ca: {
     home: 'Inici',
     map: 'Mapa',
-    settings: 'Ajustos',
+    settings: 'Config',
 
     nearbyTab: 'Prop meu',
     allTab: 'Veure tots',
