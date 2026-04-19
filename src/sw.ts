@@ -29,7 +29,7 @@ const CACHE_NAMES = {
   supabaseData: `supabase-data-${CACHE_VERSION}`,
   audioFiles:   `audio-files-${CACHE_VERSION}`,
   staticAssets: `static-assets-${CACHE_VERSION}`,
-  osmTiles:     `osm-tiles-${CACHE_VERSION}`,
+  osmTiles:     'osm-tiles-v2',
 }
 
 // ─── App shell precache ───────────────────────────────────────────────────────
