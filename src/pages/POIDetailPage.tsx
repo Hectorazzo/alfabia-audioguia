@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, MapPin, Leaf, ChevronRight, CheckCircle, Loader2, AlertCircle } from 'lucide-react'
 import { useAppStore } from '@/stores/useAppStore'
 import { useProgressStore } from '@/stores/useProgressStore'
-import { useProximity } from '@/hooks/useProximity'
 import { getPOIsWithTranslations } from '@/services/poiService'
 import AudioPlayer from '@/components/audio/AudioPlayer'
 import { trackPOIView, trackAudioPlay, trackAudioComplete } from '@/services/analyticsService'
@@ -102,7 +101,6 @@ export default function POIDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const language = useAppStore((s) => s.language)
-  const isListened = useProgressStore((s) => s.isListened)
   const toggleFavorite = useProgressStore((s) => s.toggleFavorite)
   const isFavorite = useProgressStore((s) => s.isFavorite)
 
@@ -132,27 +130,18 @@ export default function POIDetailPage() {
     [allItems, id],
   )
 
-  // All POIs for proximity engine
-  const allPOIs = useMemo(() => allItems.map((i) => i.poi), [allItems])
-
-  // Proximity — updates store's nearbyPOIs as a side-effect
-  const { nearby } = useProximity(allPOIs)
-
-  // Next suggestion: closest unlistened from nearby, or next in sort_order
+  // Next suggestion: strictly linear by sort_order
   const nextItem = useMemo((): POIItem | null => {
     if (!current) return null
 
-    const candidates = nearby.length > 0
-      ? nearby
-          .filter((p) => p.id !== id && !isListened(p.id))
-          .map((p) => allItems.find((i) => i.poi.id === p.id)!)
-          .filter(Boolean)
-      : allItems
-          .filter((i) => i.poi.id !== id && !isListened(i.poi.id))
-          .sort((a, b) => a.poi.sortOrder - b.poi.sortOrder)
+    const sorted = [...allItems].sort(
+      (a, b) => a.poi.sortOrder - b.poi.sortOrder,
+    )
+    const currentIndex = sorted.findIndex((i) => i.poi.id === id)
+    if (currentIndex === -1) return null
 
-    return candidates[0] ?? null
-  }, [nearby, allItems, id, isListened, current])
+    return sorted[currentIndex + 1] ?? null
+  }, [allItems, id, current])
 
   const isClosing = current?.poi.number === 18
 
