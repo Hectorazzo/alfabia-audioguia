@@ -67,35 +67,33 @@
   pointer-events: none !important;
 }
 
-/* POI Colors by Zone */
-/* Jardines (POIs 1-9): Verde */
-[data-poi-id="1"] circle,
-[data-poi-id="2"] circle,
-[data-poi-id="3"] circle,
-[data-poi-id="4"] circle,
-[data-poi-id="5"] circle,
-[data-poi-id="6"] circle,
-[data-poi-id="7"] circle,
-[data-poi-id="8"] circle,
-[data-poi-id="9"] circle {
-  fill: #7BA66F !important;
+/* POI visibility by view */
+/* Cuando está activo "Jardines" (exterior) - mostrar POIs 1-9 opcacos, 10-18 muy tenues */
+.map-wrapper[data-view="exterior"] [data-poi-id="10"],
+.map-wrapper[data-view="exterior"] [data-poi-id="11"],
+.map-wrapper[data-view="exterior"] [data-poi-id="12"],
+.map-wrapper[data-view="exterior"] [data-poi-id="13"],
+.map-wrapper[data-view="exterior"] [data-poi-id="14"],
+.map-wrapper[data-view="exterior"] [data-poi-id="15"],
+.map-wrapper[data-view="exterior"] [data-poi-id="16"],
+.map-wrapper[data-view="exterior"] [data-poi-id="17"],
+.map-wrapper[data-view="exterior"] [data-poi-id="18"] {
+  opacity: 0.25 !important;
+  pointer-events: none !important;
 }
 
-/* Casa (POIs 10-15): Crema/Arena */
-[data-poi-id="10"] circle,
-[data-poi-id="11"] circle,
-[data-poi-id="12"] circle,
-[data-poi-id="13"] circle,
-[data-poi-id="14"] circle,
-[data-poi-id="15"] circle {
-  fill: #D4B896 !important;
-}
-
-/* Dependencias (POIs 16-18): Tierra/Taupe */
-[data-poi-id="16"] circle,
-[data-poi-id="17"] circle,
-[data-poi-id="18"] circle {
-  fill: #9B8F7E !important;
+/* Cuando está activo "Casa" (interior) - mostrar POIs 10-18 opacos, 1-9 muy tenues */
+.map-wrapper[data-view="interior"] [data-poi-id="1"],
+.map-wrapper[data-view="interior"] [data-poi-id="2"],
+.map-wrapper[data-view="interior"] [data-poi-id="3"],
+.map-wrapper[data-view="interior"] [data-poi-id="4"],
+.map-wrapper[data-view="interior"] [data-poi-id="5"],
+.map-wrapper[data-view="interior"] [data-poi-id="6"],
+.map-wrapper[data-view="interior"] [data-poi-id="7"],
+.map-wrapper[data-view="interior"] [data-poi-id="8"],
+.map-wrapper[data-view="interior"] [data-poi-id="9"] {
+  opacity: 0.25 !important;
+  pointer-events: none !important;
 }
 
 .poi-marker {
@@ -105,7 +103,6 @@
 
 .poi-marker:hover circle {
   filter: drop-shadow(0 0 8px rgba(35, 59, 41, 0.6)) !important;
-  r: 16 !important;
 }
 
 .map-legend {
