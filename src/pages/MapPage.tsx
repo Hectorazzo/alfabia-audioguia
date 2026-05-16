@@ -2,12 +2,13 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { useNavigate } from 'react-router-dom'
-import { Loader2, AlertCircle } from 'lucide-react'
+import { Loader2, AlertCircle, Map as MapIcon } from 'lucide-react'
 import 'leaflet/dist/leaflet.css'
 import { useAppStore } from '@/stores/useAppStore'
 import { trackMapView } from '@/services/analyticsService'
 import { useProgressStore } from '@/stores/useProgressStore'
 import { getAllPOIs } from '@/services/poiService'
+import MapComponent from '@/components/MapComponent'
 import type { POI } from '@/lib/types'
 
 // ─── Fix Leaflet default icon path (Vite breaks it) ──────────────────────────
@@ -16,6 +17,7 @@ delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIcon
 // ─── Marker factories ─────────────────────────────────────────────────────────
 
 type PinState = 'default' | 'listened' | 'favorite'
+type MapMode = 'gps' | 'svg'
 
 const PIN_COLORS: Record<PinState, string> = {
   default:  '#9CA3AF',   // gray   — unvisited
@@ -55,8 +57,6 @@ function createPOIMarker(state: PinState, number: number): L.DivIcon {
   })
 }
 
-// ─── User position marker (pulsing blue dot) ──────────────────────────────────
-
 function createUserMarker(): L.DivIcon {
   return L.divIcon({
     html: `
@@ -81,8 +81,6 @@ function createUserMarker(): L.DivIcon {
   })
 }
 
-// ─── Inject pulse keyframes once ─────────────────────────────────────────────
-
 let keyframesInjected = false
 function injectPulseKeyframes() {
   if (keyframesInjected) return
@@ -98,8 +96,6 @@ function injectPulseKeyframes() {
   keyframesInjected = true
 }
 
-// ─── FitBounds: adjusts the view to show all POI markers on first load ────────
-
 function FitBounds({ pois }: { pois: POI[] }) {
   const map = useMap()
   const fitted = useMemo(() => ({ done: false }), [])
@@ -114,17 +110,16 @@ function FitBounds({ pois }: { pois: POI[] }) {
   return null
 }
 
-// ─── MapPage ─────────────────────────────────────────────────────────────────
-
 export default function MapPage() {
-  const navigate   = useNavigate()
+  const navigate = useNavigate()
+  const [mapMode, setMapMode] = useState<MapMode>('svg')
   const userPosition = useAppStore((s) => s.userPosition)
-  const favorites    = useProgressStore((s) => s.favorites)
+  const favorites = useProgressStore((s) => s.favorites)
   const listenedPOIs = useProgressStore((s) => s.listenedPOIs)
 
-  const [pois, setPOIs]       = useState<POI[]>([])
+  const [pois, setPOIs] = useState<POI[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(false)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     injectPulseKeyframes()
@@ -154,8 +149,26 @@ export default function MapPage() {
     [favorites, listenedPOIs],
   )
 
-  // ── Loading / error states ────────────────────────────────────────────────
+  // SVG Map mode (default)
+  if (mapMode === 'svg') {
+    return (
+      <div style={{ height: 'calc(100svh - 64px)' }} className="relative">
+        <MapComponent />
+        
+        {/* Map mode toggle (top-left) */}
+        <button
+          onClick={() => setMapMode('gps')}
+          className="absolute top-4 left-4 z-[200] flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm border border-alfabia-border rounded-lg shadow-sm hover:bg-white transition-all"
+          title="Cambiar a mapa GPS"
+        >
+          <MapIcon className="w-4 h-4 text-alfabia-green" />
+          <span className="text-xs font-medium text-alfabia-text">GPS</span>
+        </button>
+      </div>
+    )
+  }
 
+  // GPS Map mode (Leaflet)
   if (loading) {
     return (
       <div className="flex items-center justify-center gap-2 h-full text-alfabia-text-muted">
@@ -181,13 +194,10 @@ export default function MapPage() {
     )
   }
 
-  // ── Map ───────────────────────────────────────────────────────────────────
-
-  // Default centre: Jardines de Alfabia
   const defaultCenter: [number, number] = [39.76400, 2.78400]
 
   return (
-    <div style={{ height: 'calc(100svh - 64px)' }} className="overflow-hidden">
+    <div style={{ height: 'calc(100svh - 64px)' }} className="overflow-hidden relative">
       <MapContainer
         center={defaultCenter}
         zoom={16}
@@ -201,10 +211,8 @@ export default function MapPage() {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         />
 
-        {/* Fit all pins on first load */}
         {pois.length > 0 && <FitBounds pois={pois} />}
 
-        {/* ── POI markers ── */}
         {pois.map((poi) => {
           const state = pinState(poi.id)
           return (
@@ -219,10 +227,8 @@ export default function MapPage() {
           )
         })}
 
-        {/* ── User position ── */}
         {userPosition && (
           <>
-            {/* GPS accuracy radius */}
             {userPosition.accuracy < 200 && (
               <Circle
                 center={[userPosition.lat, userPosition.lng]}
@@ -233,7 +239,6 @@ export default function MapPage() {
                 weight={1}
               />
             )}
-            {/* Pulsing dot */}
             <Marker
               position={[userPosition.lat, userPosition.lng]}
               icon={createUserMarker()}
@@ -243,7 +248,17 @@ export default function MapPage() {
         )}
       </MapContainer>
 
-      {/* ── Legend ── */}
+      {/* Map mode toggle (top-left) */}
+      <button
+        onClick={() => setMapMode('svg')}
+        className="absolute top-4 left-4 z-[500] flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm border border-alfabia-border rounded-lg shadow-sm hover:bg-white transition-all"
+        title="Cambiar a mapa interactivo"
+      >
+        <MapIcon className="w-4 h-4 text-alfabia-green" />
+        <span className="text-xs font-medium text-alfabia-text">Mapa</span>
+      </button>
+
+      {/* Legend */}
       <div className="absolute bottom-20 right-3 z-[500] flex flex-col gap-1.5 bg-white/90 backdrop-blur-sm border border-alfabia-border rounded-xl px-3 py-2.5 shadow-sm pointer-events-none">
         {(
           [
