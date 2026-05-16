@@ -1,103 +1,76 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import mapaSvg from './mapa.svg?raw';
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useProgressStore } from '@/stores/useProgressStore'
+import { trackMapView } from '@/services/analyticsService'
+import mapaUrl from '@/assets/mapa.svg'
+import './MapComponent.css'
+
+type ViewMode = 'exterior' | 'interior'
 
 export default function MapComponent() {
-  const [showExterior, setShowExterior] = useState(true);
-  const navigate = useNavigate();
+  const navigate = useNavigate()
+  const [view, setView] = useState<ViewMode>('exterior')
+  const [svgContent, setSvgContent] = useState<string>('')
 
-  const handlePOIClick = (poiId) => {
-    console.log(`Clicked POI: ${poiId}`);
-    navigate(`/poi/${poiId}`);
-  };
+  useEffect(() => {
+    trackMapView()
+    fetch(mapaUrl)
+      .then((r) => r.text())
+      .then((content) => setSvgContent(content))
+      .catch((e) => console.error('Error loading map:', e))
+  }, [])
+
+  const handlePOIClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement
+    const poiWrapper = target.closest('[data-poi-id]') as HTMLElement | null
+    if (poiWrapper) {
+      const poiId = poiWrapper.getAttribute('data-poi-id')
+      if (poiId) {
+        navigate(`/poi/${poiId}`)
+      }
+    }
+  }
 
   return (
-    <div style={{ maxWidth: '100%', margin: '0 auto' }}>
-      {/* Toggle Buttons */}
-      <div style={{
-        display: 'flex',
-        gap: '12px',
-        marginBottom: '16px',
-        justifyContent: 'center'
-      }}>
+    <div className="map-container">
+      <div className="map-toggle">
         <button
-          onClick={() => setShowExterior(true)}
-          style={{
-            padding: '8px 16px',
-            borderRadius: '8px',
-            border: 'none',
-            background: showExterior ? '#233B29' : '#E5E0D5',
-            color: showExterior ? '#fff' : '#374151',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '14px',
-            transition: 'all 0.2s'
-          }}
+          onClick={() => setView('exterior')}
+          className={`toggle-btn ${view === 'exterior' ? 'active' : ''}`}
         >
           🌳 Jardines
         </button>
         <button
-          onClick={() => setShowExterior(false)}
-          style={{
-            padding: '8px 16px',
-            borderRadius: '8px',
-            border: 'none',
-            background: !showExterior ? '#233B29' : '#E5E0D5',
-            color: !showExterior ? '#fff' : '#374151',
-            cursor: 'pointer',
-            fontWeight: 600,
-            fontSize: '14px',
-            transition: 'all 0.2s'
-          }}
+          onClick={() => setView('interior')}
+          className={`toggle-btn ${view === 'interior' ? 'active' : ''}`}
         >
           🏠 Casa
         </button>
       </div>
 
-      {/* Map SVG */}
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '600px',
-          margin: '0 auto',
-          border: '1px solid #E5E0D5',
-          borderRadius: '12px',
-          overflow: 'hidden',
-          background: '#F8F2E7'
-        }}
-        dangerouslySetInnerHTML={{ __html: mapaSvg }}
-        onClick={(e) => {
-          const target = e.target;
-          const poiWrapper = target.closest('[data-poi-id]');
-          if (poiWrapper) {
-            const poiId = poiWrapper.getAttribute('data-poi-id');
-            handlePOIClick(poiId);
-          }
-        }}
-      />
+      {svgContent && (
+        <div
+          className="map-wrapper"
+          data-view={view}
+          onClick={handlePOIClick}
+          dangerouslySetInnerHTML={{ __html: svgContent }}
+        />
+      )}
 
-      {/* Styles for toggle */}
-      <style>{`
-        .map-layer {
-          transition: opacity 0.3s ease;
-        }
-        .exterior-layer {
-          opacity: ${showExterior ? '1' : '0.2'};
-          pointer-events: ${showExterior ? 'auto' : 'none'};
-        }
-        .interior-layer {
-          opacity: ${!showExterior ? '1' : '0.2'};
-          pointer-events: ${!showExterior ? 'auto' : 'none'};
-        }
-        .poi-marker {
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .poi-marker:hover circle {
-          r: 16;
-          filter: drop-shadow(0 0 8px rgba(35, 59, 41, 0.6));
-        }
-      `}</style>
+      <div className="map-legend">
+        <div className="legend-item">
+          <span className="legend-color" style={{ backgroundColor: '#9CA3AF' }} />
+          <span>No visitado</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-color" style={{ backgroundColor: '#233B29' }} />
+          <span>Escuchado</span>
+        </div>
+        <div className="legend-item">
+          <span className="legend-color" style={{ backgroundColor: '#EF4444' }} />
+          <span>Favorito</span>
+        </div>
+      </div>
     </div>
-  );
+  )
 }
