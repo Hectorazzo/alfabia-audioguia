@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useProgressStore } from '@/stores/useProgressStore'
 import { trackMapView } from '@/services/analyticsService'
 import mapaUrl from '@/assets/mapa.svg'
 import './MapComponent.css'
