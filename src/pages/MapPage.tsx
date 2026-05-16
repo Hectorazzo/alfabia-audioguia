@@ -11,18 +11,15 @@ import { getAllPOIs } from '@/services/poiService'
 import MapComponent from '@/components/MapComponent'
 import type { POI } from '@/lib/types'
 
-// ─── Fix Leaflet default icon path (Vite breaks it) ──────────────────────────
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
-
-// ─── Marker factories ─────────────────────────────────────────────────────────
 
 type PinState = 'default' | 'listened' | 'favorite'
 type MapMode = 'gps' | 'svg'
 
 const PIN_COLORS: Record<PinState, string> = {
-  default:  '#9CA3AF',   // gray   — unvisited
-  listened: '#233B29',   // green  — listened
-  favorite: '#EF4444',   // red    — favorite
+  default:  '#9CA3AF',
+  listened: '#233B29',
+  favorite: '#EF4444',
 }
 
 function createPOIMarker(state: PinState, number: number): L.DivIcon {
@@ -149,13 +146,11 @@ export default function MapPage() {
     [favorites, listenedPOIs],
   )
 
-  // SVG Map mode (default)
   if (mapMode === 'svg') {
     return (
       <div style={{ height: 'calc(100svh - 64px)' }} className="relative">
         <MapComponent />
         
-        {/* Map mode toggle (top-left) */}
         <button
           onClick={() => setMapMode('gps')}
           className="absolute top-4 left-4 z-[200] flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm border border-alfabia-border rounded-lg shadow-sm hover:bg-white transition-all"
@@ -168,7 +163,6 @@ export default function MapPage() {
     )
   }
 
-  // GPS Map mode (Leaflet)
   if (loading) {
     return (
       <div className="flex items-center justify-center gap-2 h-full text-alfabia-text-muted">
@@ -248,7 +242,6 @@ export default function MapPage() {
         )}
       </MapContainer>
 
-      {/* Map mode toggle (top-left) */}
       <button
         onClick={() => setMapMode('svg')}
         className="absolute top-4 left-4 z-[500] flex items-center gap-2 px-3 py-2 bg-white/90 backdrop-blur-sm border border-alfabia-border rounded-lg shadow-sm hover:bg-white transition-all"
@@ -258,7 +251,6 @@ export default function MapPage() {
         <span className="text-xs font-medium text-alfabia-text">Mapa</span>
       </button>
 
-      {/* Legend */}
       <div className="absolute bottom-20 right-3 z-[500] flex flex-col gap-1.5 bg-white/90 backdrop-blur-sm border border-alfabia-border rounded-xl px-3 py-2.5 shadow-sm pointer-events-none">
         {(
           [
